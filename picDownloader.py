@@ -5,7 +5,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-class PicDownloader(object):
+class picDownloader(object):
     def __init__(self,keyWord,counts,searchEngine=None,selfSearchEngine=None,path="."):
         """
         if the parameter selfSearchEngine not Null,use it as
