@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf8 -*-
 import BeautifulSoup,os,urllib2,urllib
-import sys,re,threading
+import sys,re,threading,getopt
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -122,24 +122,37 @@ class picDownloader(object):
     def startDownload(self):
         engine=self.searchEngine(self.keyWord)
         urlGenerator=engine.getImgUrl()
+        if(not os.path.exists(self.path)):
+            os.makedirs(self.path)
         i=1
-        for i in xrange(self.counts):
+        while(downloadThread.preDownloadedCounts!=self.counts+1):
             flag=True
             while flag:
                 if(downloadThread.numOfThreads<=self.maxThreads):
                     imgurl=urlGenerator.next()
-                    t=downloadThread(imgurl,self.path+'/'+str(i)+self.getImgType(imgurl))
+                    t=downloadThread(imgurl,self.path+os.sep+str(i)+self.getImgType(imgurl))
                     t.setDaemon(True)
                     t.start()
                     flag=False
-            
+            i+=1 
+        while(downloadThread.preDownloadedCounts-downloadThread.downloadedCounts-1):
+            imgurl=urlGenerator.next()
+            t=downloadThread(imgurl,self.path+'/'+str(i)+self.getImgType(imgurl))
+            t.setDaemon(True)
+            t.start()
+            t.join()
+            i+=1
 
     def getImgType(self,imgurl):
         return imgurl[imgurl.rfind('.'):]
 
+
+
 class downloadThread(threading.Thread):
     '''multi thread download'''
     numOfThreads=0
+    downloadedCounts=0
+    preDownloadedCounts=0
 
     def __init__(self,imgUrl,path): 
         '''imgUrl to download,path to write file(include filename)'''
@@ -149,20 +162,43 @@ class downloadThread(threading.Thread):
 
     def run(self):
         downloadThread.numOfThreads+=1
-        fd=urllib2.urlopen(self.imgUrl)
+        downloadThread.preDownloadedCounts+=1
+        try:
+            fd=urllib2.urlopen(self.imgUrl)
+        except:
+            downloadThread.preDownloadedCounts-=1
+            downloadThread.numOfThreads-=1
+            sys.exit()
         print('downloading:'+str(self.imgUrl))
-        fw=open(self.path,'w')
-        data=fd.read(1024)
-        while(len(data)!=0):
-            fw.write(data)
+        if(os.path.exists(self.path)==False):
+            fw=open(self.path,'w')
             data=fd.read(1024)
+            while(len(data)!=0):
+                fw.write(data)
+                data=fd.read(1024)
+        downloadThread.downloadedCounts+=1
         downloadThread.numOfThreads-=1
 
 
-
+def Usage():
+    '''picDownloader's usage'''
+    print('Usage: -w keyword -c counts -p store path\nlike: picDownloader.py -w 树 -c 100 -p E:\Pic')
 
 
 if __name__=='__main__':
-    d=picDownloader(u'树',100,searchEngine=baiduEngine,path='.'+os.sep+'pic')
+    try:
+        opts,args=getopt.getopt(sys.argv[1:],'hw:c:p:',['help'])
+    except getopt.GetoptError as err:
+        print(str(err))
+        Usage()
+        sys.exit(2)
+    optDict=dict(i for i in opts)
+    if(optDict.get('-w',0)==0 or optDict.get('-c',0)==0):
+        print('You MUST specify the "-w keyword" and "-c counts" option')
+        sys.exit(2)
+    elif(optDict.get('-p',0)!=0): #has -p option
+        d=picDownloader(optDict['-w'],optDict['-c'],path=optDict['-p'])
+    else:
+        d=picDownloader(optDict['-w'],optDict['-c'])
     d.startDownload()
 
