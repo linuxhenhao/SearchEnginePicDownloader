@@ -82,7 +82,7 @@ class downloadThread(threading.Thread):
 
 def Usage():
     '''picDownloader's usage'''
-    print('Usage: -w keyword -c counts -p store path\nlike: picDownloader.py -w 树 -c 100 -p E:\Pic')
+    print('Usage: -w keyword -c counts -p store path\nlike: picDownloader.py -w "small cat" -c 100 -p E:\Pic')
 
 
 if __name__=='__main__':
@@ -95,6 +95,7 @@ if __name__=='__main__':
     optDict=dict(i for i in opts)
     if(optDict.get('-w',0)==0 or optDict.get('-c',0)==0):
         print('You MUST specify the "-w keyword" and "-c counts" option')
+	Usage()
         sys.exit(2)
     elif(optDict.get('-p',0)!=0): #has -p option
         d=picDownloader(optDict['-w'],int(optDict['-c']),path=optDict['-p'])
