@@ -70,11 +70,12 @@ class downloadThread(threading.Thread):
             sys.exit()
         print('downloading:'+str(self.imgUrl))
         if(os.path.exists(self.path)==False):
-            fw=open(self.path,'w')
+            fw=open(self.path,'wb')
             data=fd.read(1024)
             while(len(data)!=0):
                 fw.write(data)
                 data=fd.read(1024)
+	    fw.close()
         downloadThread.downloadedCounts+=1
         downloadThread.numOfThreads-=1
 
