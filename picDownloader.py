@@ -26,24 +26,20 @@ class picDownloader(object):
         urlGenerator=engine.getImgUrl()
         if(not os.path.exists(self.path)):
             os.makedirs(self.path)
-        i=1
-        while(downloadThread.preDownloadedCounts!=self.counts+1):
-            flag=True
-            while flag:
-                if(downloadThread.numOfThreads<=self.maxThreads):
-                    imgurl=urlGenerator.next()
-                    t=downloadThread(imgurl,self.path+os.sep+str(i)+self.getImgType(imgurl))
-                    t.setDaemon(True)
-                    t.start()
-                    flag=False
-            i+=1 
-        while(downloadThread.preDownloadedCounts-downloadThread.downloadedCounts-1):
+        threadList=list()
+        for j in range(self.maxThreads):
             imgurl=urlGenerator.next()
-            t=downloadThread(imgurl,self.path+os.sep+str(i)+self.getImgType(imgurl))
-            t.setDaemon(True)
-            t.start()
-            t.join()
-            i+=1
+            t=downloadThread(imgurl,self.path+os.sep+str(downloadThread.preDownloadedCounts)+self.getImgType(imgurl))
+            threadList.append(t)
+        for j in threadList:
+            j.start()
+        while(downloadThread.downloadedCounts<self.counts): #download not finished
+            while(downloadThread.preDownloadedCounts<self.counts):       #download thread not full
+                if(downloadThread.numOfThreads<self.maxThreads):
+                    imgurl=urlGenerator.next()
+                    t=downloadThread(imgurl,self.path+os.sep+str(downloadThread.preDownloadedCounts)+self.getImgType(imgurl))
+                    t.start()
+        while(downloadThread.numOfThreads!=0):pass #wait until all download thread finished
 
     def getImgType(self,imgurl):
         return imgurl[imgurl.rfind('.'):]
@@ -61,10 +57,11 @@ class downloadThread(threading.Thread):
         threading.Thread.__init__(self)
         self.imgUrl=imgUrl
         self.path=path
-
-    def run(self):
+        self.setDaemon(True)
         downloadThread.numOfThreads+=1
         downloadThread.preDownloadedCounts+=1
+
+    def run(self):
         try:
             fd=urllib2.urlopen(self.imgUrl)
         except:
