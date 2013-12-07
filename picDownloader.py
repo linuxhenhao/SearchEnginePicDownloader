@@ -63,7 +63,7 @@ class downloadThread(threading.Thread):
 
     def run(self):
         try:
-            fd=urllib2.urlopen(self.imgUrl)
+            fd=urllib2.urlopen(self.imgUrl,timeout=10) #add timeout 
         except:
             downloadThread.preDownloadedCounts-=1
             downloadThread.numOfThreads-=1
@@ -71,13 +71,26 @@ class downloadThread(threading.Thread):
         print('downloading:'+str(self.imgUrl))
         if(os.path.exists(self.path)==False):
             fw=open(self.path,'wb')
-            data=fd.read(1024)
+            data=self.safeRead(fd,fw)
             while(len(data)!=0):
                 fw.write(data)
-                data=fd.read(1024)
+                data=self.safeRead(fd,fw)
 	    fw.close()
         downloadThread.downloadedCounts+=1
         downloadThread.numOfThreads-=1
+
+    def safeRead(self,fd,fw):
+        '''handle the timeout exception'''
+        try:
+            data=fd.read(1024)
+        except URLError as e:
+            downloadThread.preDownloadedCounts-=1
+            downloadThread.numOfThreads-=1
+            fd.close()
+            fw.close()
+            os.remove(self.path)
+            sys.exit()
+        return data
 
 
 def Usage():
