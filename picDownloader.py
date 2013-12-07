@@ -27,9 +27,11 @@ class picDownloader(object):
         if(not os.path.exists(self.path)):
             os.makedirs(self.path)
         threadList=list()
+        name=1
         for j in range(self.maxThreads):
             imgurl=urlGenerator.next()
-            t=downloadThread(imgurl,self.path+os.sep+str(downloadThread.preDownloadedCounts)+self.getImgType(imgurl))
+            t=downloadThread(imgurl,self.path+os.sep+str(name)+self.getImgType(imgurl))
+            name+=1
             threadList.append(t)
         for j in threadList:
             j.start()
@@ -37,7 +39,8 @@ class picDownloader(object):
             while(downloadThread.preDownloadedCounts<self.counts):       #download thread not full
                 if(downloadThread.numOfThreads<self.maxThreads):
                     imgurl=urlGenerator.next()
-                    t=downloadThread(imgurl,self.path+os.sep+str(downloadThread.preDownloadedCounts)+self.getImgType(imgurl))
+                    t=downloadThread(imgurl,self.path+os.sep+str(name)+self.getImgType(imgurl))
+                    name+=1
                     t.start()
         while(downloadThread.numOfThreads!=0):pass #wait until all download thread finished
 
