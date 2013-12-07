@@ -81,8 +81,8 @@ class baiduEngine(baseSearchEngine):
             urls=wantedDiv.findAll('a')
         for i in urls:
             self.__genAttrMap(i)
-            imgUrlmatch=self.matchImgsrc.search(i,attrMap['href'])
-            if(imgUrl!=None):
+            imgUrlmatch=self.matchImgSrc.search(i.attrMap['href'])
+            if(imgUrlmatch!=None):
                 imgUrls.append(imgUrlmatch.groups()[0])
         return imgUrls,nextPageUrl
 
