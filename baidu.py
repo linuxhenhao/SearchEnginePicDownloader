@@ -27,7 +27,7 @@ class baiduEngine(baseSearchEngine):
         self.getSearchUrl() #gen self.url and self.baseReqData
         self.host='wap.baidu.com'
         self.baseReqData['word']=keyWord
-        self.matchImgSrc=re.compile('src=(\S+([jJ][Pp][gG]|[pP][nN][gG]))')
+        self.matchImgSrc=re.compile('src=(\S+([jJ][Pp][gG]|[pP][nN][gG]|[gG][iI][fF]))')
         self.IMGDIVCLASS='mt ct b'
         self.NEXTPAGEDIVCLASS='wm lh pr'
 
@@ -75,11 +75,15 @@ class baiduEngine(baseSearchEngine):
                             if(aUrl.getText()==u'下一页'):
                                 nextPageUrl='http://'+self.host+'/'+aUrl['href']
                     else:
-                        del i
-        urls=wantedDiv.findAll('a')
+                       del i
+        urls=None
+        while(urls==None):
+            urls=wantedDiv.findAll('a')
         for i in urls:
             self.__genAttrMap(i)
-            imgUrls.append(self.matchImgSrc.search(i.attrMap['href']).groups()[0])
+            imgUrlmatch=self.matchImgsrc.search(i,attrMap['href'])
+            if(imgUrl!=None):
+                imgUrls.append(imgUrlmatch.groups()[0])
         return imgUrls,nextPageUrl
 
     def getSearchUrl(self):
