@@ -83,7 +83,7 @@ class downloadThread(threading.Thread):
         '''handle the timeout exception'''
         try:
             data=fd.read(1024)
-        except URLError as e:
+        except urllib2.URLError as e:
             downloadThread.preDownloadedCounts-=1
             downloadThread.numOfThreads-=1
             fd.close()
